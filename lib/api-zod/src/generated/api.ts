@@ -153,3 +153,12 @@ export const GetMyOrdersResponseItem = zod.object({
 export const GetMyOrdersResponse = zod.array(GetMyOrdersResponseItem)
 
 
+/**
+ * @summary Check the authenticated user's database connection
+ */
+export const CheckDatabaseResponse = zod.object({
+  "ok": zod.boolean(),
+  "message": zod.string()
+})
+
+

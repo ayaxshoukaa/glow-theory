@@ -8,13 +8,28 @@ servers:
   - url: /shop-api
     description: Glow Theory API route (forwarded to Next.js app/api routes)
 tags:
+  - name: health
+    description: Service health status
   - name: products
     description: Product catalog
   - name: auth
     description: Customer accounts and sessions
   - name: orders
     description: Customer order history
+  - name: diagnostics
+    description: Authenticated database health checks
 paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Check whether the API server is healthy
+      responses:
+        "200":
+          description: API server is ready
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthCheckResponse" }
   /products:
     get:
       operationId: getProducts
@@ -151,6 +166,27 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+  /database-check:
+    post:
+      operationId: checkDatabase
+      tags: [diagnostics]
+      summary: Check the authenticated user's database connection
+      responses:
+        "200":
+          description: MongoDB responded to a read-only ping
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DatabaseCheckResponse" }
+        "401":
+          description: Sign in required
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503":
+          description: MongoDB could not be reached
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 components:
   responses:
     BadRequest:
@@ -169,6 +205,14 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
   schemas:
+    HealthStatus:
+      type: string
+      enum: [ok]
+    HealthCheckResponse:
+      type: object
+      properties:
+        status: { $ref: "#/components/schemas/HealthStatus" }
+      required: [status]
     ProductCategory:
       type: string
       enum: [Skincare, Lip Care, Body Care, Gift Sets]
@@ -239,6 +283,12 @@ components:
           enum: [pending, paid]
         createdAt: { type: string, format: date-time }
       required: [id, items, total, status, createdAt]
+    DatabaseCheckResponse:
+      type: object
+      properties:
+        ok: { type: boolean }
+        message: { type: string }
+      required: [ok, message]
     Error:
       type: object
       properties:

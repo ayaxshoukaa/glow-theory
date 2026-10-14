@@ -675,6 +675,12 @@ h1 em, h2 em { color: var(--mocha); font-weight: 500; }
 .auth-switch a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .spin { animation: spin 1s linear infinite; }
 .orders-list { display: grid; gap: 18px; }
+.database-check-panel { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin: 20px 0 28px; padding: 18px 20px; border: 1px solid var(--line); background: rgba(255,255,255,.64); }
+.database-check-copy { min-width: min(100%, 220px); }
+.database-check-status { margin: 4px 0 0; color: #73665f; font-size: 11px; line-height: 1.7; }
+.database-check-status.is-connected { color: #44624a; }
+.database-check-status.has-error { color: #9a4f4b; }
+.database-check-button { flex-shrink: 0; }
 .order-card { padding: 22px; background: #f4ebe2; }
 .order-top { padding-bottom: 16px; border-bottom: 1px solid #e2d5c9; display: grid; grid-template-columns: 1fr auto auto; gap: 20px; align-items: center; }
 .order-top h2 { margin: 5px 0 0; font-family: var(--serif); font-size: 17px; font-weight: 500; }

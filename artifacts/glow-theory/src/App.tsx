@@ -9,6 +9,7 @@ import type { GetProductsParams, Product } from '@workspace/api-client-react';
 import type { LoginInput, SignupInput, UserProfile } from '@workspace/api-client-react';
 import { Link, Route, Switch, useLocation, useParams } from 'wouter';
 import { ArrowLeft, ArrowRight, Check, Heart, LoaderCircle, LockKeyhole, Menu, Minus, Plus, Search, ShoppingBag, Sparkles, X } from 'lucide-react';
+import DatabaseCheckButton from './components/DatabaseCheckButton';
 import { StoreProvider, useStore } from './components/store';
 
 const client = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
@@ -304,7 +305,47 @@ function OrdersPage() {
   const ordersQuery = useGetMyOrders({ query: { enabled: !!user, queryKey: getGetMyOrdersQueryKey() } });
   if (userLoading) return <div className="page-shell"><div className="order-skeleton"/></div>;
   if (!user) return <div className="page-shell"><div className="state-panel"><span className="eyebrow">Your account</span><h1>Good things<br/><em>are waiting.</em></h1><p>Sign in to see the orders linked to your account.</p><Link href="/login" className="button button-dark">Sign in <ArrowRight size={16}/></Link></div></div>;
-  return <div className="page-shell"><div className="page-intro compact-intro"><span className="eyebrow">Your account · {user.name}</span><h1>Order<br/><em>notes.</em></h1><p>Your Glow Theory order history, all in one place.</p></div>{ordersQuery.isLoading ? <div className="order-skeleton"/> : ordersQuery.isError ? <QueryError retry={() => { qc.invalidateQueries({ queryKey: getGetMyOrdersQueryKey() }); }}/> : ordersQuery.data?.length ? <div className="orders-list">{ordersQuery.data.map((order) => <article className="order-card" key={order.id}><div className="order-top"><div><span className="eyebrow">Order {order.id}</span><h2>{new Date(order.createdAt).toLocaleDateString()}</h2></div><span className={`status-pill status-${order.status}`}>{order.status}</span><strong>{money(order.total)}</strong></div><div className="order-products">{order.items.map((item) => <div className="order-item" key={`${order.id}-${item.productId}`}><Image src={productImage(item.name, item.image)} alt={item.name} className="order-thumb"/><span>{item.name}</span><small>× {item.quantity}</small><strong>{money(item.price * item.quantity)}</strong></div>)}</div></article>)}</div> : <div className="empty-panel"><ShoppingBag/><h3>No order notes yet.</h3><p>Once you’ve found a favorite, it’ll show up here.</p><Link href="/products" className="button button-dark">Browse the shelf</Link></div>}</div>;
+  return (
+    <div className="page-shell">
+      <div className="page-intro compact-intro">
+        <span className="eyebrow">Your account · {user.name}</span>
+        <h1>Order<br/><em>notes.</em></h1>
+        <p>Your Glow Theory order history, all in one place.</p>
+      </div>
+      <DatabaseCheckButton />
+      {ordersQuery.isLoading ? <div className="order-skeleton"/> : ordersQuery.isError ? (
+        <QueryError retry={() => { qc.invalidateQueries({ queryKey: getGetMyOrdersQueryKey() }); }}/>
+      ) : ordersQuery.data?.length ? (
+        <div className="orders-list">
+          {ordersQuery.data.map((order) => (
+            <article className="order-card" key={order.id}>
+              <div className="order-top">
+                <div><span className="eyebrow">Order {order.id}</span><h2>{new Date(order.createdAt).toLocaleDateString()}</h2></div>
+                <span className={`status-pill status-${order.status}`}>{order.status}</span>
+                <strong>{money(order.total)}</strong>
+              </div>
+              <div className="order-products">
+                {order.items.map((item) => (
+                  <div className="order-item" key={`${order.id}-${item.productId}`}>
+                    <Image src={productImage(item.name, item.image)} alt={item.name} className="order-thumb"/>
+                    <span>{item.name}</span>
+                    <small>× {item.quantity}</small>
+                    <strong>{money(item.price * item.quantity)}</strong>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="empty-panel">
+          <ShoppingBag/><h3>No order notes yet.</h3>
+          <p>Once you’ve found a favorite, it’ll show up here.</p>
+          <Link href="/products" className="button button-dark">Browse the shelf</Link>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function NotFound() { return <div className="state-panel"><span className="eyebrow">Wrong turn</span><h1>That page<br/><em>isn’t here.</em></h1><Link href="/" className="button button-dark">Back to home <ArrowRight size={16}/></Link></div>; }

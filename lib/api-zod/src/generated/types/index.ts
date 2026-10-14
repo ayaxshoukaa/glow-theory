@@ -7,6 +7,7 @@
  */
 
 export * from './badRequestResponse';
+export * from './databaseCheckResponse';
 export * from './error';
 export * from './getProductsParams';
 export * from './getProductsSort';

@@ -86,6 +86,11 @@ export interface Order {
   createdAt: string;
 }
 
+export interface DatabaseCheckResponse {
+  ok: boolean;
+  message: string;
+}
+
 export interface Error {
   error: string;
 }

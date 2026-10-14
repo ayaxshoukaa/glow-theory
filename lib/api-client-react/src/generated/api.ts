@@ -21,6 +21,7 @@ import type {
 
 import type {
   BadRequestResponse,
+  DatabaseCheckResponse,
   Error,
   GetProductsParams,
   LoginInput,
@@ -623,4 +624,78 @@ export function useGetMyOrders<TData = Awaited<ReturnType<typeof getMyOrders>>, 
 
 
 
+
+export const getCheckDatabaseUrl = () => {
+
+
+
+
+  return `/shop-api/database-check`
+}
+
+/**
+ * @summary Check the authenticated user's database connection
+ */
+export const checkDatabase = async ( options?: Parameters<typeof customFetch>[1]): Promise<DatabaseCheckResponse> => {
+
+  return customFetch<DatabaseCheckResponse>(getCheckDatabaseUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCheckDatabaseMutationKey = () => ['checkDatabase'] as const;
+
+export const getCheckDatabaseMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkDatabase>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkDatabase>>, TError,void, TContext> => {
+
+const mutationKey = getCheckDatabaseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkDatabase>>, void> = () => {
+
+
+          return  checkDatabase(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CheckDatabaseMutationResult = NonNullable<Awaited<ReturnType<typeof checkDatabase>>>
+
+    export type CheckDatabaseMutationError = ErrorType<Error>
+
+
+    /**
+ * @summary Check the authenticated user's database connection
+ */
+export const useCheckDatabase = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkDatabase>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof checkDatabase>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCheckDatabaseMutationOptions(options));
+    }
 
