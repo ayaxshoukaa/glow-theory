@@ -26,7 +26,9 @@ export default defineConfig({
       target: "generated",
       client: "react-query",
       mode: "split",
-      baseUrl: "/api",
+      // The API server artifact already owns /api; the Next app exposes these
+      // routes at /shop-api and rewrites them to app/api internally.
+      baseUrl: "/shop-api",
       clean: true,
       prettier: true,
       override: {

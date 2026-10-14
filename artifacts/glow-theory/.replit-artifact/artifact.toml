@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Glow Theory"
+description = "A premium-feeling skincare and self-care shop for teens and young adults, with a KWD product catalog, wishlist, cart, preference quiz, and clearly labeled demo forms."
+version = "1.0.0"
+id = "artifacts/glow-theory"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24254
+
+[services.development]
+run = "pnpm --filter @workspace/glow-theory run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/glow-theory", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/glow-theory/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24254"
+BASE_PATH = "/"
