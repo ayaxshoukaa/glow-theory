@@ -9,6 +9,14 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Check whether the API server is healthy
+ */
+export const HealthCheckResponse = zod.object({
+  "status": zod.enum(['ok'])
+})
+
+
+/**
  * @summary Search and filter products
  */
 export const getProductsQueryMaxPriceMin = 0;

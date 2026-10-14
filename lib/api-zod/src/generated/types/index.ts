@@ -11,6 +11,8 @@ export * from './databaseCheckResponse';
 export * from './error';
 export * from './getProductsParams';
 export * from './getProductsSort';
+export * from './healthResponse';
+export * from './healthStatus';
 export * from './loginInput';
 export * from './notFoundResponse';
 export * from './order';

@@ -29,7 +29,7 @@ paths:
           description: API server is ready
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/HealthCheckResponse" }
+              schema: { $ref: "#/components/schemas/HealthResponse" }
   /products:
     get:
       operationId: getProducts
@@ -208,7 +208,7 @@ components:
     HealthStatus:
       type: string
       enum: [ok]
-    HealthCheckResponse:
+    HealthResponse:
       type: object
       properties:
         status: { $ref: "#/components/schemas/HealthStatus" }
