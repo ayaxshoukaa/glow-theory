@@ -82,7 +82,6 @@
     "bcryptjs": "^3.0.3",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.11.2",
-    "next": "^16.4.0",
-    "server-only": "^0.0.1"
+    "next": "^16.4.0"
   }
 }

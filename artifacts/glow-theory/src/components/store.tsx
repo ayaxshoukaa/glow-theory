@@ -13,6 +13,30 @@ type StoreState = {
 };
 
 const StoreContext = createContext<StoreState | null>(null);
+function isProduct(value: unknown): value is Product {
+  if (!value || typeof value !== 'object') return false;
+  const product = value as Record<string, unknown>;
+  return typeof product.id === 'string'
+    && typeof product.slug === 'string'
+    && typeof product.name === 'string'
+    && typeof product.description === 'string'
+    && typeof product.image === 'string'
+    && typeof product.category === 'string'
+    && typeof product.price === 'number'
+    && Number.isFinite(product.price)
+    && product.price >= 0
+    && typeof product.isBestseller === 'boolean'
+    && typeof product.featured === 'boolean'
+    && typeof product.createdAt === 'string';
+}
+function isCartLine(value: unknown): value is CartLine {
+  if (!value || typeof value !== 'object') return false;
+  const line = value as Record<string, unknown>;
+  return isProduct(line.product)
+    && typeof line.quantity === 'number'
+    && Number.isSafeInteger(line.quantity)
+    && line.quantity > 0;
+}
 const read = <T,>(key: string, fallback: T): T => {
   try {
     const raw = localStorage.getItem(key);
@@ -27,8 +51,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    setCart(read<CartLine[]>('glow-theory-cart', []).filter((line) => line?.product?.id && line.quantity > 0));
-    setWishlist(read<string[]>('glow-theory-wishlist', []).filter((id) => typeof id === 'string'));
+    const savedCart = read<unknown>('glow-theory-cart', []);
+    const savedWishlist = read<unknown>('glow-theory-wishlist', []);
+    setCart(Array.isArray(savedCart) ? savedCart.filter(isCartLine) : []);
+    setWishlist(Array.isArray(savedWishlist) ? savedWishlist.filter((id): id is string => typeof id === 'string') : []);
     setReady(true);
   }, []);
   useEffect(() => {

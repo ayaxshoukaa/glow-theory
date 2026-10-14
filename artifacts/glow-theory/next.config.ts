@@ -4,7 +4,13 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   transpilePackages: ["@workspace/api-client-react"],
-  allowedDevOrigins: ["*.replit.dev", "*.replit.app"],
+  allowedDevOrigins: [
+    "*.replit.dev",
+    "*.pike.replit.dev",
+    "*.replit.app",
+    "127.0.0.1",
+    "localhost",
+  ],
   async rewrites() {
     return [
       {

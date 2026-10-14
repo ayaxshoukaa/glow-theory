@@ -6,9 +6,20 @@ async function seedProducts() {
   await connectToDatabase();
 
   let added = 0;
+  let migrated = 0;
   let alreadyPresent = 0;
 
   for (const product of SEED_PRODUCTS) {
+    const legacyImage = product.image.replace(/\.webp$/i, ".png");
+    const legacyProduct = await Product.updateOne(
+      { slug: product.slug, image: legacyImage },
+      { $set: product },
+    );
+    if (legacyProduct.matchedCount > 0) {
+      migrated += 1;
+      continue;
+    }
+
     const result = await Product.updateOne(
       { slug: product.slug },
       { $setOnInsert: product },
@@ -19,7 +30,7 @@ async function seedProducts() {
   }
 
   process.stdout.write(
-    `Glow Theory catalog ready: ${added} added, ${alreadyPresent} already present.\n`,
+    `Glow Theory catalog ready: ${added} added, ${migrated} sample records updated, ${alreadyPresent} already present.\n`,
   );
 }
 

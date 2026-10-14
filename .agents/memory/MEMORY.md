@@ -1,0 +1,1 @@
+- [Next.js Replit runtime boundaries](next-runtime-boundaries.md) — keep seed-safe server helpers separate from RSC-only guards and allow nested Replit preview hosts.
