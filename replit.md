@@ -1,44 +1,57 @@
-# [Project name]
+# Glow Theory
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A responsive skincare and self-care shop for teens and young adults, built around the slogan “Your Glow, Your Rules.”
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/glow-theory run dev` — run the Glow Theory Next.js website
+- `pnpm --filter @workspace/glow-theory run seed` — add missing sample catalog products to MongoDB
+- `pnpm --filter @workspace/glow-theory run typecheck` — check the website TypeScript
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required website secrets: `MONGODB_URI` and `JWT_SECRET` in Replit Secrets
+- The separate scaffolded API Server and PostgreSQL package are not used by the Glow Theory shop.
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Website: Next.js App Router, TypeScript, Tailwind CSS
+- Shop API: Next.js route handlers, Mongoose, MongoDB Atlas
+- Account sessions: bcryptjs password hashes and signed httpOnly JWT cookies
+- API contract/codegen: OpenAPI and Orval
+- Cart and wishlist: browser localStorage
+- Checkout, contact, and newsletter: clearly labeled demo flows; no real payments or message delivery
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/glow-theory/app/` — storefront pages and Next.js API routes
+- `artifacts/glow-theory/components/` — shared shop UI
+- `artifacts/glow-theory/models/` — MongoDB User, Product, and Order models
+- `artifacts/glow-theory/lib/db.ts` — cached server-side MongoDB connection
+- `artifacts/glow-theory/lib/seed-data.ts` — sample catalog source for the idempotent seed script
+- `lib/api-spec/openapi.yaml` — generated API client contract
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Keep the app's MongoDB collections namespaced (`glow_theory_*`) so they do not collide with unrelated collections in the existing Atlas database.
+- The shared API artifact already owns `/api`; the website calls `/shop-api`, which Next.js rewrites internally to its `app/api` handlers.
+- Product catalog data is read from MongoDB. Cart and wishlist stay on the device and are not submitted as orders.
+- Demo checkout never requests payment details or creates a real order.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Glow Theory includes product discovery, product details and quick view, search/filter/sort, a preference-based product quiz, cart and wishlist, customer signup/login, protected order history, and local demo-only contact/newsletter/checkout forms.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Follow the attached Glow Theory requirements, including the blush/cream/mocha palette and Playfair Display/Poppins typography.
+- Keep all database credentials server-side in Replit Secrets; never put them in source code, logs, or client bundles.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Add `MONGODB_URI` and a long random `JWT_SECRET` to Replit Secrets before using database-backed routes or the seed command.
+- Seed inserts only missing Glow Theory products; it does not replace existing catalog entries.
 
 ## Pointers
 

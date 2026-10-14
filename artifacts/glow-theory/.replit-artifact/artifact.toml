@@ -8,20 +8,26 @@ router = "path"
 
 [[services]]
 name = "web"
-paths = [ "/" ]
+paths = ["/"]
 localPort = 24254
 
 [services.development]
 run = "pnpm --filter @workspace/glow-theory run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/glow-theory", "run", "build" ]
-serve = "static"
-publicDir = "artifacts/glow-theory/dist/public"
 
-[[services.production.rewrites]]
-from = "/*"
-to = "/index.html"
+[services.production.build]
+args = ["pnpm", "--filter", "@workspace/glow-theory", "run", "build"]
+
+[services.production.build.env]
+NODE_ENV = "production"
+
+[services.production.run]
+args = ["pnpm", "--filter", "@workspace/glow-theory", "run", "start"]
+
+[services.production.run.env]
+PORT = "24254"
+NODE_ENV = "production"
 
 [services.env]
 PORT = "24254"
