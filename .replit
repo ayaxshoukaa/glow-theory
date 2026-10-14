@@ -22,5 +22,5 @@ timeoutMs = 20000
 [userenv]
 
 [userenv.shared]
-JWT_SECRETS = "node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\""
 MONGODB_URI = "mongodb+srv://ayas06122_db_user:<db_password>@cluster0.jmwqrym.mongodb.net/"
+JWT_SECRET = "node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\""
