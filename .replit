@@ -18,3 +18,9 @@ expertMode = true
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[userenv]
+
+[userenv.shared]
+MONGO_DB = "mongodb+srv://ayas06122_db_user:<db_password>@cluster0.jmwqrym.mongodb.net/"
+JWT_SECRETS = "node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\""
