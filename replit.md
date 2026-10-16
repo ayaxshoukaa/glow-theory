@@ -10,7 +10,8 @@ A responsive skincare and self-care shop for teens and young adults, built aroun
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- Required website secrets: `MONGODB_URI` and `JWT_SECRET` in Replit Secrets
+- Required Replit preview secrets: `MONGODB_URI` and `JWT_SECRET`; Stripe test checkout also needs `STRIPE_SECRET_KEY`
+- Vercel has a separate environment-variable store. Add `MONGODB_URI`, `JWT_SECRET`, and `STRIPE_SECRET_KEY` there for deployments; Replit Secrets do not transfer to Vercel.
 - The separate scaffolded API Server and PostgreSQL package are not used by the Glow Theory shop.
 
 ## Stack
@@ -21,7 +22,7 @@ A responsive skincare and self-care shop for teens and young adults, built aroun
 - Account sessions: bcryptjs password hashes and signed httpOnly JWT cookies
 - API contract/codegen: OpenAPI and Orval
 - Cart and wishlist: browser localStorage
-- Checkout, contact, and newsletter: clearly labeled demo flows; no real payments or message delivery
+- Checkout: Stripe-hosted test-mode Checkout created by server-side Next.js route handlers; contact and newsletter remain demo flows
 
 ## Where things live
 
@@ -36,17 +37,18 @@ A responsive skincare and self-care shop for teens and young adults, built aroun
 
 - Keep the app's MongoDB collections namespaced (`glow_theory_*`) so they do not collide with unrelated collections in the existing Atlas database.
 - The shared API artifact already owns `/api`; the website calls `/shop-api`, which Next.js rewrites internally to its `app/api` handlers.
-- Product catalog data is read from MongoDB. Cart and wishlist stay on the device and are not submitted as orders.
-- Demo checkout never requests payment details or creates a real order.
+- Product catalog data is read from MongoDB. Cart and wishlist stay on the device; checkout sends product IDs and quantities only, with prices recalculated from MongoDB on the server.
+- Stripe Checkout is test-mode only and collects payment and shipping details on Stripe. Successful return verification marks the MongoDB order paid; product totals currently exclude delivery fees.
+- Do not switch to live payments until shipping charges and Stripe webhook reconciliation are configured.
 
 ## Product
 
-Glow Theory includes product discovery, product details and quick view, search/filter/sort, a preference-based product quiz, cart and wishlist, customer signup/login, protected order history, and local demo-only contact/newsletter/checkout forms.
+Glow Theory includes product discovery, product details and quick view, search/filter/sort, a preference-based product quiz, cart and wishlist, customer signup/login, protected order history, Stripe test checkout, and local demo-only contact/newsletter forms.
 
 ## User preferences
 
 - Follow the attached Glow Theory requirements, including the blush/cream/mocha palette and Playfair Display/Poppins typography.
-- Keep all database credentials server-side in Replit Secrets; never put them in source code, logs, or client bundles.
+- Keep all database and Stripe credentials server-side; never put them in source code, logs, or client bundles.
 
 ## Gotchas
 

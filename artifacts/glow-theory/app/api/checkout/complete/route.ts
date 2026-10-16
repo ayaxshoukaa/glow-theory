@@ -7,6 +7,14 @@ import Order from "@/models/Order";
 
 export const runtime = "nodejs";
 
+function stripeStatusCode(error: unknown): number | undefined {
+  if (typeof error === "object" && error !== null && "statusCode" in error) {
+    const statusCode = error.statusCode;
+    return typeof statusCode === "number" ? statusCode : undefined;
+  }
+  return undefined;
+}
+
 export async function POST(request: Request) {
   let body: unknown;
   try {
@@ -31,7 +39,20 @@ export async function POST(request: Request) {
   }
 
   try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    let session: Awaited<ReturnType<typeof stripe.checkout.sessions.retrieve>>;
+    try {
+      session = await stripe.checkout.sessions.retrieve(sessionId);
+    } catch (error) {
+      const statusCode = stripeStatusCode(error);
+      if (statusCode === 404) {
+        return jsonError("Checkout session could not be found.", 404);
+      }
+      if (statusCode === 401 || statusCode === 403) {
+        return jsonError("Stripe test credentials could not be authenticated.", 503);
+      }
+      return serverError();
+    }
+
     const orderId = session.metadata?.orderId;
     if (
       session.mode !== "payment" ||

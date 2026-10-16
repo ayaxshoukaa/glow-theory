@@ -1,2 +1,3 @@
 - [Next.js Replit runtime boundaries](next-runtime-boundaries.md) — keep seed-safe server helpers separate from RSC-only guards and allow nested Replit preview hosts.
 - [OpenAPI codegen schema names](orval-schema-names.md) — keep component names distinct from operation-derived Zod responses and build every shared-package consumer after codegen.
+- [Multi-artifact preview routing](multi-artifact-preview-routing.md) — shared root proxy requests can hit a different artifact; use the web workflow’s resolved port for direct API checks.
