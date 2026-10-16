@@ -29,8 +29,8 @@ export async function GET() {
             | null;
           return {
             productId: product?._id.toString() ?? "",
-            name: product?.name ?? "Product no longer available",
-            image: product?.image ?? "",
+            name: item.productName || product?.name || "Product no longer available",
+            image: item.productImage || product?.image || "",
             quantity: item.quantity,
             price: Number(item.price.toFixed(3)),
           };

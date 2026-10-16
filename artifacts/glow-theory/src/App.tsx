@@ -205,7 +205,7 @@ function CartPage() {
   const { cart, setQuantity, remove } = useStore();
   const total = cart.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
   if (!cart.length) return <div className="page-shell"><div className="page-intro compact-intro"><span className="eyebrow">Your little corner</span><h1>Your bag is<br/><em>taking a break.</em></h1><p>When something feels like you, it’ll be waiting here.</p><Link href="/products" className="button button-dark">Meet the shelf <ArrowRight size={16}/></Link></div></div>;
-  return <div className="page-shell"><div className="page-intro compact-intro"><span className="eyebrow">Your little corner</span><h1>The good<br/><em>stuff.</em></h1></div><div className="cart-layout"><div className="cart-lines">{cart.map(({ product, quantity }) => <article className="cart-line" key={product.id}><Link href={`/products/${product.id}`}><Image src={productImage(product.name, product.image)} alt={product.name} className="cart-image"/></Link><div className="cart-line-copy"><span className="eyebrow">{product.category}</span><Link href={`/products/${product.id}`} className="product-name">{product.name}</Link><span>{money(product.price)}</span><div className="quantity-control"><button aria-label={`Decrease ${product.name} quantity`} onClick={() => setQuantity(product.id, quantity - 1)}><Minus size={14}/></button><span aria-live="polite">{quantity}</span><button aria-label={`Increase ${product.name} quantity`} onClick={() => setQuantity(product.id, quantity + 1)}><Plus size={14}/></button></div></div><div className="line-end"><strong>{money(product.price * quantity)}</strong><button className="remove-link" onClick={() => remove(product.id)}>Remove</button></div></article>)}</div><aside className="summary-box"><span className="eyebrow">The little tally</span><div className="summary-row"><span>Subtotal</span><strong>{money(total)}</strong></div><p>Demo checkout only; no delivery fee or charge is calculated.</p><Link href="/checkout" className="button button-dark full-button">Continue to demo checkout <ArrowRight size={16}/></Link><div className="safe-note"><LockKeyhole size={15}/> No payment details collected</div></aside></div></div>;
+  return <div className="page-shell"><div className="page-intro compact-intro"><span className="eyebrow">Your little corner</span><h1>The good<br/><em>stuff.</em></h1></div><div className="cart-layout"><div className="cart-lines">{cart.map(({ product, quantity }) => <article className="cart-line" key={product.id}><Link href={`/products/${product.id}`}><Image src={productImage(product.name, product.image)} alt={product.name} className="cart-image"/></Link><div className="cart-line-copy"><span className="eyebrow">{product.category}</span><Link href={`/products/${product.id}`} className="product-name">{product.name}</Link><span>{money(product.price)}</span><div className="quantity-control"><button aria-label={`Decrease ${product.name} quantity`} onClick={() => setQuantity(product.id, quantity - 1)}><Minus size={14}/></button><span aria-live="polite">{quantity}</span><button aria-label={`Increase ${product.name} quantity`} onClick={() => setQuantity(product.id, quantity + 1)}><Plus size={14}/></button></div></div><div className="line-end"><strong>{money(product.price * quantity)}</strong><button className="remove-link" onClick={() => remove(product.id)}>Remove</button></div></article>)}</div><aside className="summary-box"><span className="eyebrow">The little tally</span><div className="summary-row"><span>Subtotal</span><strong>{money(total)}</strong></div><p>Continue to secure test checkout. Delivery is collected by Stripe; no delivery fee is included yet.</p><Link href="/checkout" className="button button-dark full-button">Continue to checkout <ArrowRight size={16}/></Link><div className="safe-note"><LockKeyhole size={15}/> Payment details stay on Stripe</div></aside></div></div>;
 }
 
 function WishlistPage() {
@@ -260,16 +260,77 @@ function ContactPage() {
 }
 
 function CheckoutPage() {
-  const { cart, clear } = useStore();
-  const [done, setDone] = useState(false);
+  const { cart } = useStore();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState('');
   const total = cart.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
-  const submit = (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); if (!e.currentTarget.reportValidity()) return; clear(); setDone(true); };
-  if (done) return <div className="page-shell"><div className="state-panel"><span className="eyebrow">Demo checkout</span><div className="success-mark"><Check/></div><h1>That’s all for<br/><em>this demo.</em></h1><p>No order has been placed, no payment was taken, and no details were stored.</p><div className="demo-disclaimer">This storefront does not process payments or create real orders.</div><Link href="/checkout/success" className="button button-dark">Continue <ArrowRight size={16}/></Link></div></div>;
+  const startCheckout = async () => {
+    if (!cart.length || pending) return;
+    setPending(true);
+    setError('');
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cart.map(({ product, quantity }) => ({
+            productId: product.id,
+            quantity,
+          })),
+        }),
+      });
+      const result = await response.json().catch(() => null) as { url?: unknown; error?: unknown } | null;
+      if (!response.ok || !result || typeof result.url !== 'string') {
+        setError(typeof result?.error === 'string' ? result.error : 'Secure checkout could not be started. Please try again.');
+        setPending(false);
+        return;
+      }
+      window.location.assign(result.url);
+    } catch {
+      setError('We couldn’t reach secure checkout. Check your connection and try again.');
+      setPending(false);
+    }
+  };
   if (!cart.length) return <div className="page-shell"><div className="state-panel"><span className="eyebrow">Demo checkout</span><h1>Your bag is<br/><em>empty.</em></h1><Link className="button button-dark" href="/products">Browse products</Link></div></div>;
-  return <div className="page-shell checkout-page"><div className="page-intro compact-intro"><span className="eyebrow">Demo checkout</span><h1>One last<br/><em>little step.</em></h1><p>This is only a demonstration. No payment details, please.</p></div><div className="checkout-layout"><form className="form-card" onSubmit={submit}><span className="eyebrow">Contact and delivery</span><label htmlFor="checkout-name">Full name</label><input id="checkout-name" required maxLength={100} placeholder="Your name" /><label htmlFor="checkout-email">Email address</label><input id="checkout-email" type="email" required maxLength={254} placeholder="you@example.com" /><label htmlFor="checkout-address">Delivery address</label><input id="checkout-address" required maxLength={200} placeholder="Street and building" /><div className="form-split"><div><label htmlFor="checkout-city">City</label><input id="checkout-city" required maxLength={80} placeholder="City" /></div><div><label htmlFor="checkout-country">Country</label><select id="checkout-country" required defaultValue=""><option value="" disabled>Select</option><option>Kuwait</option><option>Bahrain</option><option>Qatar</option><option>United Arab Emirates</option><option>Saudi Arabia</option></select></div></div><div className="demo-disclaimer"><LockKeyhole size={16}/> Demonstration only. Never enter payment details.</div><button className="button button-dark full-button" type="submit">Preview demo checkout <ArrowRight size={16}/></button><div className="checkout-cancel"><Link href="/checkout/cancel">Cancel this demo</Link></div><p className="demo-note">Continue creates no real order, transaction, or saved customer details.</p></form><aside className="summary-box"><span className="eyebrow">Your bag</span>{cart.map(({ product, quantity }) => <div className="summary-product" key={product.id}><span>{product.name} × {quantity}</span><strong>{money(product.price * quantity)}</strong></div>)}<div className="summary-row"><span>Subtotal</span><strong>{money(total)}</strong></div></aside></div></div>;
+  return <div className="page-shell checkout-page"><div className="page-intro compact-intro"><span className="eyebrow">Stripe test checkout</span><h1>One last<br/><em>little step.</em></h1><p>Your payment and delivery details are collected securely by Stripe.</p></div><div className="checkout-layout"><section className="form-card"><span className="eyebrow">Secure payment</span><h2>Ready when you are.</h2><p>Continue to Stripe’s hosted checkout to enter your test card, email, and delivery address.</p><div className="demo-disclaimer"><LockKeyhole size={16}/> Test mode only. No real payment will be taken.</div><button className="button button-dark full-button" type="button" onClick={startCheckout} disabled={pending}>{pending ? <><LoaderCircle className="spin"/> Opening secure checkout…</> : <>Continue to Stripe <ArrowRight size={16}/></>}</button><p className="form-feedback" role="status" aria-live="polite">{error}</p><p className="demo-note">Your card details go directly to Stripe, never through Glow Theory.</p></section><aside className="summary-box"><span className="eyebrow">Your bag</span>{cart.map(({ product, quantity }) => <div className="summary-product" key={product.id}><span>{product.name} × {quantity}</span><strong>{money(product.price * quantity)}</strong></div>)}<div className="summary-row"><span>Product total</span><strong>{money(total)}</strong></div><p>Shipping address is collected at checkout. Delivery fees are not included in this test flow.</p></aside></div></div>;
 }
 function CheckoutStatus({ success }: { success: boolean }) {
-  return <div className="page-shell"><div className="state-panel"><span className="eyebrow">Demonstration only</span><div className={`success-mark ${success ? '' : 'cancel-mark'}`}>{success ? <Check/> : <X/>}</div><h1>{success ? <>All good,<br/><em>in demo-land.</em></> : <>Checkout<br/><em>paused.</em></>}</h1><p>{success ? 'This is a demo confirmation, not an order. No payment was made and no order was created.' : 'Nothing was charged or saved. Your cart is still yours if you want to keep browsing.'}</p><div className="demo-disclaimer">No real order or payment has been processed.</div><Link href={success ? '/' : '/cart'} className="button button-dark">{success ? 'Back to Glow Theory' : 'Return to your bag'} <ArrowRight size={16}/></Link></div></div>;
+  const { clear } = useStore();
+  const [status, setStatus] = useState<'checking' | 'paid' | 'failed'>(success ? 'checking' : 'failed');
+  const [orderId, setOrderId] = useState('');
+  const clearRef = useRef(clear);
+  clearRef.current = clear;
+  useEffect(() => {
+    if (!success) return;
+    const sessionId = new URLSearchParams(window.location.search).get('session_id');
+    if (!sessionId) {
+      setStatus('failed');
+      return;
+    }
+    let active = true;
+    fetch('/api/checkout/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId }),
+    }).then(async (response) => {
+      const result = await response.json().catch(() => null) as { order?: { id?: unknown }; error?: unknown } | null;
+      if (!active) return;
+      if (response.ok && result?.order && typeof result.order.id === 'string') {
+        setOrderId(result.order.id);
+        setStatus('paid');
+        clearRef.current();
+      } else {
+        setStatus('failed');
+      }
+    }).catch(() => {
+      if (active) setStatus('failed');
+    });
+    return () => { active = false; };
+  }, [success]);
+
+  const paid = success && status === 'paid';
+  const checking = success && status === 'checking';
+  return <div className="page-shell"><div className="state-panel"><span className="eyebrow">{success ? 'Stripe test checkout' : 'Checkout'}</span><div className={`success-mark ${paid ? '' : 'cancel-mark'}`}>{checking ? <LoaderCircle className="spin"/> : paid ? <Check/> : <X/>}</div><h1>{checking ? <>Checking your<br/><em>payment.</em></> : paid ? <>Thank you,<br/><em>glow-getter.</em></> : success ? <>Payment<br/><em>not confirmed.</em></> : <>Checkout<br/><em>paused.</em></>}</h1><p>{checking ? 'We’re securely verifying your test payment with Stripe.' : paid ? 'Your test payment is confirmed and the order has been saved.' : success ? 'We could not verify this payment. Your bag is still saved; please try again or contact support if needed.' : 'Checkout was cancelled. Your bag is still saved and no payment was completed.'}</p>{paid && orderId && <div className="demo-disclaimer">Order reference: {orderId}</div>}{paid && <div className="demo-disclaimer">Test mode only. No real payment was taken.</div>}<Link href={paid ? '/' : '/cart'} className="button button-dark">{paid ? 'Back to Glow Theory' : 'Return to your bag'} <ArrowRight size={16}/></Link></div></div>;
 }
 
 function AuthPage({ signup = false }: { signup?: boolean }) {
