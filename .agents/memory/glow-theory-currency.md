@@ -1,10 +1,10 @@
 ---
 name: Glow Theory currency policy
-description: The storefront should remain priced and charged in Kuwaiti dinars unless the owner explicitly chooses a different currency.
+description: Storefront and hosted Checkout use USD converted from KWD-denominated catalog values.
 ---
 
-Keep Glow Theory product prices and Stripe-hosted checkout in KWD. Do not silently switch to USD or another supported currency. The Stripe account must be enabled to accept KWD before checkout can complete.
+The owner chose USD storefront prices and Stripe-hosted checkout, converting existing KWD catalog values at approximately 3.21 USD per KWD and rounding to cents. Do not simply relabel KWD values as USD. Keep original MongoDB base prices intact unless the owner separately asks to rewrite them.
 
-**Why:** The owner explicitly chose to keep KWD after Stripe rejected a test Checkout Session because the account did not support KWD.
+**Why:** Stripe rejected KWD on the connected account, and the owner explicitly chose USD conversion at the quoted rate.
 
-**How to apply:** If Stripe rejects KWD, guide the owner to enable KWD settlement with a matching supported bank account in Stripe, then retest. Only change storefront pricing or charge currency after the owner explicitly approves the change.
+**How to apply:** Keep product display, price filters, cart totals, and Stripe amounts consistent with the approved conversion. Ask before changing the conversion rate or rewriting the stored KWD base values.

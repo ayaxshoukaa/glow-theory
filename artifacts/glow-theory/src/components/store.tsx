@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Product } from '@workspace/api-client-react';
+import { USD_CURRENCY, kwdToUsd } from '@/lib/currency';
 
 type CartLine = { product: Product; quantity: number };
 type StoreState = {
@@ -13,29 +14,42 @@ type StoreState = {
 };
 
 const StoreContext = createContext<StoreState | null>(null);
-function isProduct(value: unknown): value is Product {
-  if (!value || typeof value !== 'object') return false;
+function normalizeStoredProduct(value: unknown): Product | null {
+  if (!value || typeof value !== 'object') return null;
   const product = value as Record<string, unknown>;
-  return typeof product.id === 'string'
-    && typeof product.slug === 'string'
-    && typeof product.name === 'string'
-    && typeof product.description === 'string'
-    && typeof product.image === 'string'
-    && typeof product.category === 'string'
-    && typeof product.price === 'number'
-    && Number.isFinite(product.price)
-    && product.price >= 0
-    && typeof product.isBestseller === 'boolean'
-    && typeof product.featured === 'boolean'
-    && typeof product.createdAt === 'string';
+  if (
+    typeof product.id !== 'string'
+    || typeof product.name !== 'string'
+    || typeof product.description !== 'string'
+    || typeof product.image !== 'string'
+    || typeof product.category !== 'string'
+    || typeof product.price !== 'number'
+    || !Number.isFinite(product.price)
+    || product.price < 0
+    || typeof product.isBestseller !== 'boolean'
+    || typeof product.featured !== 'boolean'
+    || typeof product.createdAt !== 'string'
+  ) return null;
+
+  if (product.currency === USD_CURRENCY) return product as unknown as Product;
+  if (product.currency !== undefined && product.currency !== 'KWD') return null;
+  return {
+    ...product,
+    price: kwdToUsd(product.price),
+    currency: USD_CURRENCY,
+  } as unknown as Product;
 }
-function isCartLine(value: unknown): value is CartLine {
-  if (!value || typeof value !== 'object') return false;
+function normalizeStoredCartLine(value: unknown): CartLine | null {
+  if (!value || typeof value !== 'object') return null;
   const line = value as Record<string, unknown>;
-  return isProduct(line.product)
-    && typeof line.quantity === 'number'
-    && Number.isSafeInteger(line.quantity)
-    && line.quantity > 0;
+  const product = normalizeStoredProduct(line.product);
+  if (
+    !product
+    || typeof line.quantity !== 'number'
+    || !Number.isSafeInteger(line.quantity)
+    || line.quantity < 1
+  ) return null;
+  return { product, quantity: line.quantity };
 }
 const read = <T,>(key: string, fallback: T): T => {
   try {
@@ -53,7 +67,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const savedCart = read<unknown>('glow-theory-cart', []);
     const savedWishlist = read<unknown>('glow-theory-wishlist', []);
-    setCart(Array.isArray(savedCart) ? savedCart.filter(isCartLine) : []);
+    setCart(Array.isArray(savedCart) ? savedCart.map(normalizeStoredCartLine).filter((line): line is CartLine => line !== null) : []);
     setWishlist(Array.isArray(savedWishlist) ? savedWishlist.filter((id): id is string => typeof id === 'string') : []);
     setReady(true);
   }, []);

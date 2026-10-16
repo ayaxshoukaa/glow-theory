@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
 import { jsonError, serverError } from "@/lib/http";
+import { USD_PER_KWD } from "@/lib/currency";
 import { serializeProduct } from "@/lib/products";
 import Product, { productCategories } from "@/models/Product";
 
@@ -28,7 +29,7 @@ export async function GET(request: Request) {
     const filter: Record<string, unknown> = {};
     if (parsed.data.category) filter.category = parsed.data.category;
     if (parsed.data.maxPrice !== undefined) {
-      filter.price = { $lte: parsed.data.maxPrice };
+      filter.price = { $lte: parsed.data.maxPrice / USD_PER_KWD };
     }
     if (parsed.data.search) {
       const escaped = parsed.data.search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

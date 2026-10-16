@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { OrderCurrency } from './orderCurrency';
 import type { OrderItem } from './orderItem';
 import type { OrderStatus } from './orderStatus';
 
@@ -13,6 +14,7 @@ export interface Order {
   items: OrderItem[];
   /** @minimum 0 */
   total: number;
+  currency: OrderCurrency;
   status: OrderStatus;
   createdAt: Date;
 }

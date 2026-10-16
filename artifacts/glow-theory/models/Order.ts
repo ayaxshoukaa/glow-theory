@@ -24,7 +24,7 @@ const OrderSchema = new mongoose.Schema(
     },
     items: { type: [OrderItemSchema], required: true },
     total: { type: Number, required: true, min: 0 },
-    currency: { type: String, enum: ["KWD"], default: "KWD", required: true },
+    currency: { type: String, enum: ["KWD", "USD"], default: "USD", required: true },
     status: {
       type: String,
       enum: ["pending", "paid"],

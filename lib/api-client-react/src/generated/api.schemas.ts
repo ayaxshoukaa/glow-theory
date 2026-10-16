@@ -26,12 +26,20 @@ export const ProductCategory = {
   Gift_Sets: 'Gift Sets',
 } as const;
 
+export type ProductCurrency = typeof ProductCurrency[keyof typeof ProductCurrency];
+
+
+export const ProductCurrency = {
+  USD: 'USD',
+} as const;
+
 export interface Product {
   id: string;
   name: string;
   description: string;
   /** @minimum 0 */
   price: number;
+  currency: ProductCurrency;
   image: string;
   category: ProductCategory;
   isBestseller: boolean;
@@ -80,6 +88,14 @@ export interface OrderItem {
   price: number;
 }
 
+export type OrderCurrency = typeof OrderCurrency[keyof typeof OrderCurrency];
+
+
+export const OrderCurrency = {
+  KWD: 'KWD',
+  USD: 'USD',
+} as const;
+
 export type OrderStatus = typeof OrderStatus[keyof typeof OrderStatus];
 
 
@@ -93,6 +109,7 @@ export interface Order {
   items: OrderItem[];
   /** @minimum 0 */
   total: number;
+  currency: OrderCurrency;
   status: OrderStatus;
   createdAt: string;
 }

@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import type { ProductRecord } from "@/models/Product";
+import { USD_CURRENCY, kwdToUsd } from "@/lib/currency";
 
 type ProductDocumentLike = ProductRecord & { _id: Types.ObjectId };
 
@@ -8,7 +9,8 @@ export function serializeProduct(product: ProductDocumentLike) {
     id: product._id.toString(),
     name: product.name,
     description: product.description,
-    price: Number(product.price.toFixed(3)),
+    price: kwdToUsd(product.price),
+    currency: USD_CURRENCY,
     image: product.image,
     category: product.category,
     isBestseller: product.isBestseller,

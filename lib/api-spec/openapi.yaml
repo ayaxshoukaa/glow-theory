@@ -223,6 +223,7 @@ components:
         name: { type: string }
         description: { type: string }
         price: { type: number, minimum: 0 }
+        currency: { type: string, enum: [USD] }
         image: { type: string }
         category: { $ref: "#/components/schemas/ProductCategory" }
         isBestseller: { type: boolean }
@@ -233,6 +234,7 @@ components:
         - name
         - description
         - price
+        - currency
         - image
         - category
         - isBestseller
@@ -278,11 +280,12 @@ components:
           type: array
           items: { $ref: "#/components/schemas/OrderItem" }
         total: { type: number, minimum: 0 }
+        currency: { type: string, enum: [KWD, USD] }
         status:
           type: string
           enum: [pending, paid]
         createdAt: { type: string, format: date-time }
-      required: [id, items, total, status, createdAt]
+      required: [id, items, total, currency, status, createdAt]
     DatabaseCheckResponse:
       type: object
       properties:

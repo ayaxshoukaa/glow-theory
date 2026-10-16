@@ -39,6 +39,7 @@ export const GetProductsResponseItem = zod.object({
   "name": zod.string(),
   "description": zod.string(),
   "price": zod.number().min(getProductsResponsePriceMin),
+  "currency": zod.enum(['USD']),
   "image": zod.string(),
   "category": zod.enum(['Skincare', 'Lip Care', 'Body Care', 'Gift Sets']),
   "isBestseller": zod.boolean(),
@@ -64,6 +65,7 @@ export const GetProductResponse = zod.object({
   "name": zod.string(),
   "description": zod.string(),
   "price": zod.number().min(getProductResponsePriceMin),
+  "currency": zod.enum(['USD']),
   "image": zod.string(),
   "category": zod.enum(['Skincare', 'Lip Care', 'Body Care', 'Gift Sets']),
   "isBestseller": zod.boolean(),
@@ -155,6 +157,7 @@ export const GetMyOrdersResponseItem = zod.object({
   "price": zod.number().min(getMyOrdersResponseItemsItemPriceMin)
 })),
   "total": zod.number().min(getMyOrdersResponseTotalMin),
+  "currency": zod.enum(['KWD', 'USD']),
   "status": zod.enum(['pending', 'paid']),
   "createdAt": zod.coerce.date()
 })

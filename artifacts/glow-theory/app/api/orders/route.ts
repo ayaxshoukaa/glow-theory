@@ -32,10 +32,11 @@ export async function GET() {
             name: item.productName || product?.name || "Product no longer available",
             image: item.productImage || product?.image || "",
             quantity: item.quantity,
-            price: Number(item.price.toFixed(3)),
+            price: Number(item.price.toFixed(order.currency === "KWD" ? 3 : 2)),
           };
         }),
-        total: Number(order.total.toFixed(3)),
+        total: Number(order.total.toFixed(order.currency === "KWD" ? 3 : 2)),
+        currency: order.currency,
         status: order.status,
         createdAt: order.createdAt.toISOString(),
       })),

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ProductCategory } from './productCategory';
+import type { ProductCurrency } from './productCurrency';
 
 export interface Product {
   id: string;
@@ -13,6 +14,7 @@ export interface Product {
   description: string;
   /** @minimum 0 */
   price: number;
+  currency: ProductCurrency;
   image: string;
   category: ProductCategory;
   isBestseller: boolean;

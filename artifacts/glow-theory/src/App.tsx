@@ -13,7 +13,13 @@ import DatabaseCheckButton from './components/DatabaseCheckButton';
 import { StoreProvider, useStore } from './components/store';
 
 const client = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
-const money = (n: number) => `KWD ${Number(n || 0).toFixed(3)}`;
+const money = (n: number, currency: "KWD" | "USD" = "USD") =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: currency === "KWD" ? 3 : 2,
+    maximumFractionDigits: currency === "KWD" ? 3 : 2,
+  }).format(Number(n || 0));
 const categories = [ProductCategory.Skincare, ProductCategory.Lip_Care, ProductCategory.Body_Care, ProductCategory.Gift_Sets];
 function productImage(_name: string, fromCatalog?: string) {
   return fromCatalog || '';
@@ -181,7 +187,7 @@ function ShopPage() {
   }), [search, category, maxPrice, sort]);
   const query = useGetProducts(params, { query: { queryKey: getGetProductsQueryKey(params) } });
   return <div className="page-shell"><div className="page-intro shop-intro"><span className="eyebrow">A shelf for every you</span><h1>Find your<br/><em>feel-good.</em></h1><p>Good things for your skin, your bag, and your five-minute reset.</p></div>
-    <section className="shop-layout"><aside className="filter-panel"><span className="filter-title">Make it yours</span><label className="field-label" htmlFor="product-search">Search the shelf</label><div className="search-box"><Search size={16}/><input id="product-search" type="search" placeholder="Try lip balm..." value={search} onChange={(e) => setSearch(e.target.value)} /></div><label className="field-label" htmlFor="category">Category</label><select id="category" value={category} onChange={(e) => setCategory(e.target.value)}><option value="">Everything</option>{categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select><label className="field-label" htmlFor="max-price">Maximum price <span className="helper">KWD</span></label><input id="max-price" type="number" min="0" step="0.500" placeholder="Any price" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} /><label className="field-label" htmlFor="sort">Sort by</label><select id="sort" value={sort} onChange={(e) => setSort(e.target.value)}><option value="">Just browsing</option><option value="featured">Featured</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="name">Name</option></select><button className="reset-link" onClick={() => { setSearch(''); setCategory(''); setMaxPrice(''); setSort(''); setBestsellersOnly(false); }}>Clear all filters</button></aside>
+    <section className="shop-layout"><aside className="filter-panel"><span className="filter-title">Make it yours</span><label className="field-label" htmlFor="product-search">Search the shelf</label><div className="search-box"><Search size={16}/><input id="product-search" type="search" placeholder="Try lip balm..." value={search} onChange={(e) => setSearch(e.target.value)} /></div><label className="field-label" htmlFor="category">Category</label><select id="category" value={category} onChange={(e) => setCategory(e.target.value)}><option value="">Everything</option>{categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select><label className="field-label" htmlFor="max-price">Maximum price <span className="helper">USD</span></label><input id="max-price" type="number" min="0" step="0.01" placeholder="Any price" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} /><label className="field-label" htmlFor="sort">Sort by</label><select id="sort" value={sort} onChange={(e) => setSort(e.target.value)}><option value="">Just browsing</option><option value="featured">Featured</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="name">Name</option></select><button className="reset-link" onClick={() => { setSearch(''); setCategory(''); setMaxPrice(''); setSort(''); setBestsellersOnly(false); }}>Clear all filters</button></aside>
       <div className="shop-results"><div className="results-top"><span>{query.data ? `${query.data.filter((p) => !bestsellersOnly || p.isBestseller).length} things to love` : '— things to love'}</span><Link href="/find-your-glow" className="results-quiz">Not sure? Take the glow quiz <ArrowRight size={15}/></Link></div>
         {query.isLoading ? <LoadingProducts/> : query.isError ? <QueryError retry={() => query.refetch()}/> : query.data?.filter((p) => !bestsellersOnly || p.isBestseller).length ? <ProductGrid products={query.data.filter((p) => !bestsellersOnly || p.isBestseller)} onQuickView={setQuick}/> : <div className="empty-panel"><Search/><h3>No matches this time.</h3><p>Try a different word or clear your filters.</p><button className="button button-outline" onClick={() => { setSearch(''); setCategory(''); setMaxPrice(''); setSort(''); setBestsellersOnly(false); }}>Reset filters</button></div>}
       </div>
@@ -383,7 +389,7 @@ function OrdersPage() {
               <div className="order-top">
                 <div><span className="eyebrow">Order {order.id}</span><h2>{new Date(order.createdAt).toLocaleDateString()}</h2></div>
                 <span className={`status-pill status-${order.status}`}>{order.status}</span>
-                <strong>{money(order.total)}</strong>
+                <strong>{money(order.total, order.currency)}</strong>
               </div>
               <div className="order-products">
                 {order.items.map((item) => (
@@ -391,7 +397,7 @@ function OrdersPage() {
                     <Image src={productImage(item.name, item.image)} alt={item.name} className="order-thumb"/>
                     <span>{item.name}</span>
                     <small>× {item.quantity}</small>
-                    <strong>{money(item.price * item.quantity)}</strong>
+                    <strong>{money(item.price * item.quantity, order.currency)}</strong>
                   </div>
                 ))}
               </div>

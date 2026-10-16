@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getSessionUserId } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/db";
 import { jsonError, serverError } from "@/lib/http";
+import { kwdToUsdCents } from "@/lib/currency";
 import { getStripeClient } from "@/lib/stripe";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
@@ -22,7 +23,7 @@ const checkoutSchema = z.object({
     .max(12),
 });
 
-const KWD_MINOR_UNITS = 1000;
+const USD_MINOR_UNITS = 100;
 
 function stripeErrorDetails(error: unknown) {
   if (!error || typeof error !== "object") return {};
@@ -90,8 +91,8 @@ export async function POST(request: Request) {
       const product = productsById.get(productId);
       if (!product) throw new Error("Validated product disappeared.");
 
-      const unitAmount = Math.round(product.price * KWD_MINOR_UNITS);
-      if (!Number.isSafeInteger(unitAmount) || unitAmount < 1 || unitAmount % 10 !== 0) {
+      const unitAmount = kwdToUsdCents(product.price);
+      if (!Number.isSafeInteger(unitAmount) || unitAmount < 1) {
         throw new Error("A product has an invalid checkout price.");
       }
 
@@ -99,7 +100,7 @@ export async function POST(request: Request) {
         product,
         quantity,
         unitAmount,
-        price: unitAmount / KWD_MINOR_UNITS,
+        price: unitAmount / USD_MINOR_UNITS,
       };
     });
 
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
       (total, item) => total + item.unitAmount * item.quantity,
       0,
     );
-    const total = totalMinor / KWD_MINOR_UNITS;
+    const total = totalMinor / USD_MINOR_UNITS;
     const userId = await getSessionUserId();
     const userObjectId =
       userId && Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : undefined;
@@ -126,7 +127,7 @@ export async function POST(request: Request) {
         line_items: orderItems.map((item) => ({
           quantity: item.quantity,
           price_data: {
-            currency: "kwd",
+            currency: "usd",
             unit_amount: item.unitAmount,
             product_data: {
               name: item.product.name,
@@ -144,7 +145,7 @@ export async function POST(request: Request) {
 
       if (details.param === "line_items[0][price_data][currency]") {
         return jsonError(
-          "Stripe checkout is not enabled for KWD on this account yet.",
+          "Stripe checkout is not enabled for USD on this account yet.",
           503,
         );
       }
@@ -168,7 +169,7 @@ export async function POST(request: Request) {
           price: item.price,
         })),
         total,
-        currency: "KWD",
+        currency: "USD",
         status: "pending",
         stripeSessionId: session.id,
       });

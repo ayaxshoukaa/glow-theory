@@ -54,10 +54,11 @@ export async function POST(request: Request) {
     }
 
     const orderId = session.metadata?.orderId;
+    const sessionCurrency = session.currency?.toUpperCase();
     if (
       session.mode !== "payment" ||
       session.payment_status !== "paid" ||
-      session.currency !== "kwd" ||
+      (sessionCurrency !== "USD" && sessionCurrency !== "KWD") ||
       !orderId ||
       !Types.ObjectId.isValid(orderId)
     ) {
@@ -69,7 +70,12 @@ export async function POST(request: Request) {
       _id: orderId,
       stripeSessionId: session.id,
     }).exec();
-    if (!order || session.amount_total !== Math.round(order.total * 1000)) {
+    const minorUnits = sessionCurrency === "KWD" ? 1000 : 100;
+    if (
+      !order ||
+      order.currency !== sessionCurrency ||
+      session.amount_total !== Math.round(order.total * minorUnits)
+    ) {
       return jsonError("The paid order could not be matched.", 404);
     }
 
