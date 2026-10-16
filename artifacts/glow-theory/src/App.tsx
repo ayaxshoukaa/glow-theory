@@ -269,7 +269,7 @@ function CheckoutPage() {
     setPending(true);
     setError('');
     try {
-      const response = await fetch('/api/checkout', {
+      const response = await fetch('/shop-api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -308,7 +308,7 @@ function CheckoutStatus({ success }: { success: boolean }) {
       return;
     }
     let active = true;
-    fetch('/api/checkout/complete', {
+    fetch('/shop-api/checkout/complete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId }),
