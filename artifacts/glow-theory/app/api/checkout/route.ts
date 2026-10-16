@@ -24,6 +24,26 @@ const checkoutSchema = z.object({
 
 const KWD_MINOR_UNITS = 1000;
 
+function stripeErrorDetails(error: unknown) {
+  if (!error || typeof error !== "object") return {};
+
+  const candidate = error as {
+    type?: unknown;
+    code?: unknown;
+    param?: unknown;
+    statusCode?: unknown;
+  };
+
+  return {
+    ...(typeof candidate.type === "string" ? { type: candidate.type } : {}),
+    ...(typeof candidate.code === "string" ? { code: candidate.code } : {}),
+    ...(typeof candidate.param === "string" ? { param: candidate.param } : {}),
+    ...(typeof candidate.statusCode === "number"
+      ? { statusCode: candidate.statusCode }
+      : {}),
+  };
+}
+
 export async function POST(request: Request) {
   let body: unknown;
   try {
@@ -93,29 +113,44 @@ export async function POST(request: Request) {
       userId && Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : undefined;
     const origin = new URL(request.url).origin;
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      client_reference_id: orderId.toString(),
-      success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/checkout/cancel`,
-      shipping_address_collection: {
-        allowed_countries: ["KW", "BH", "QA", "AE", "SA"],
-      },
-      line_items: orderItems.map((item) => ({
-        quantity: item.quantity,
-        price_data: {
-          currency: "kwd",
-          unit_amount: item.unitAmount,
-          product_data: {
-            name: item.product.name,
-            description: item.product.description.slice(0, 500),
-            metadata: { catalogProductId: item.product._id.toString() },
-          },
+    let session: Awaited<ReturnType<typeof stripe.checkout.sessions.create>>;
+    try {
+      session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        client_reference_id: orderId.toString(),
+        success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/checkout/cancel`,
+        shipping_address_collection: {
+          allowed_countries: ["KW", "BH", "QA", "AE", "SA"],
         },
-      })),
-      metadata: { orderId: orderId.toString() },
-      payment_intent_data: { metadata: { orderId: orderId.toString() } },
-    });
+        line_items: orderItems.map((item) => ({
+          quantity: item.quantity,
+          price_data: {
+            currency: "kwd",
+            unit_amount: item.unitAmount,
+            product_data: {
+              name: item.product.name,
+              description: item.product.description.slice(0, 500),
+              metadata: { catalogProductId: item.product._id.toString() },
+            },
+          },
+        })),
+        metadata: { orderId: orderId.toString() },
+        payment_intent_data: { metadata: { orderId: orderId.toString() } },
+      });
+    } catch (error) {
+      const details = stripeErrorDetails(error);
+      console.error("[checkout] Stripe session creation failed", details);
+
+      if (details.param === "line_items[0][price_data][currency]") {
+        return jsonError(
+          "Stripe checkout is not enabled for KWD on this account yet.",
+          503,
+        );
+      }
+
+      return serverError();
+    }
 
     if (!session.url) {
       return jsonError("Secure checkout could not be started. Please try again.", 502);
